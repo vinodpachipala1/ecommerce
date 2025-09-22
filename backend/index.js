@@ -10,13 +10,18 @@ import dotenv from "dotenv";
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 dotenv.config();
+app.set("trust proxy", 1);
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+});
 
 const app = express();
 const port = 3001;
 app.use(express.json());
 const saltrounds = 10;
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: 'https://ecommerce-delta-beige.vercel.app',
     credentials: true
 }))
 
@@ -35,22 +40,22 @@ const db = new Pool({
 const PgSession = pgSession(session);
 
 app.use(
-    session({
-        store: new PgSession({
-            pool: db,
-            tableName: "session",
-            createTableIfMissing: true,
-        }),
-        secret: "your_secret_key",
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            maxAge: 1000 * 60 * 60 * 24, // 1 day
-            secure: false, //false-localhost //else-true
-            sameSite: "lax",//lax-localhost // none
-            httpOnly: true
-        },
-    })
+  session({
+    store: new PgSession({
+      pool: db,
+      tableName: "session",
+      createTableIfMissing: true,
+    }),
+    secret: "your_secret_key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+      secure: true, //false-localhost //else-true
+      sameSite: "none",//lax-localhost // none
+      httpOnly: true
+    },
+  })
 );
 
 const createTables = async () => {
