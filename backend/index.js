@@ -10,20 +10,24 @@ import dotenv from "dotenv";
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 dotenv.config();
+const port = 3001;
+const app = express();
 app.set("trust proxy", 1);
+
+app.use(cors({
+    origin: 'https://ecommerce-delta-beige.vercel.app',
+    credentials: true
+}))
+
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Credentials", "true");
   next();
 });
 
-const app = express();
-const port = 3001;
 app.use(express.json());
 const saltrounds = 10;
-app.use(cors({
-    origin: 'https://ecommerce-delta-beige.vercel.app',
-    credentials: true
-}))
+
+
 
 // const db = new Pool({
 //     user: process.env.user,
