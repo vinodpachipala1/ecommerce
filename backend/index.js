@@ -55,8 +55,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       maxAge: 1000 * 60 * 60 * 24, // 1 day
-      secure: true, //false-localhost //else-true
-      sameSite: "none",//lax-localhost // none
+      secure: false, //false-localhost //else-true
+      sameSite: "lax",//lax-localhost // none
       httpOnly: true
     },
   })
@@ -403,7 +403,7 @@ app.post("/getSellerProducts", async (req, res) => {
 app.post("/getOrdresReceived", async (req, res) => {
     const sellerId = req.body.sellerId;
     try {
-        const result = await db.query(`SELECT o.*, u.name as customer_name, p.pname as product_name, p.image  FROM orders o LEFT JOIN users u ON o.customer_id = u.id LEFT JOIN products p ON p.id = o.product_id WHERE o.seller_id = $1`, [sellerId]);
+        const result = await db.query(`SELECT o.*, u.name as customer_name, p.pname as product_name, p.image, p.imageurl  FROM orders o LEFT JOIN users u ON o.customer_id = u.id LEFT JOIN products p ON p.id = o.product_id WHERE o.seller_id = $1`, [sellerId]);
         const ordersWithImages = processProductsWithImages(result.rows)
         res.send({ orders: ordersWithImages });
     }
