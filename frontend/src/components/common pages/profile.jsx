@@ -178,7 +178,7 @@ const ProfilePage = () => {
     }
 
     return (
-        <div className="bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8">
+        <div className="bg-[#CFD8DC] min-h-screen p-4 sm:p-6 lg:p-8">
             <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md">
                 <div className="flex flex-col items-center sm:flex-row gap-6 border-b pb-8 mb-8">
                     <HiUserCircle className="w-24 h-24 text-gray-300 flex-shrink-0" />

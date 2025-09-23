@@ -24,6 +24,7 @@ const Router = ()=>{
             <Route path='/addproduct' element = {<AddProduct />} />
             <Route path='/editproduct' element = {<AddProduct />} />
             <Route path='/seller/orders' element={<SellerOrders />} />
+            <Route path='seller/product/:productId' element={<ProductDetails />} />
             <Route path='seller/profile' element={<ProfilePage />} />
         </Route>
         <Route element={<CustomerDashboard />}>

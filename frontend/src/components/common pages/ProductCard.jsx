@@ -75,10 +75,10 @@ const ProductCard = (props) => {
               <button
                 disabled
                 className={`flex-1 text-xs rounded-md py-2 px-2 flex items-center justify-center gap-1 transition-all duration-300 ${cartMessage.type === "success"
-                    ? "bg-green-600 text-white"
-                    : cartMessage.type === "error"
-                      ? "bg-red-600 text-white"
-                      : "bg-gray-600 text-white"
+                  ? "bg-green-600 text-white"
+                  : cartMessage.type === "error"
+                    ? "bg-red-600 text-white"
+                    : "bg-gray-600 text-white"
                   }`}
               >
                 {cartMessage.type === "loading" && (
@@ -92,8 +92,8 @@ const ProductCard = (props) => {
               <button
                 disabled={product.stock <= 0}
                 className={`flex-1 text-xs rounded-md py-2 px-2 ${product.stock > 0
-                    ? "bg-gray-800 text-white"
-                    : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  ? "bg-gray-800 text-white"
+                  : "bg-gray-400 text-gray-200 cursor-not-allowed"
                   }`}
                 onClick={() => AddtoCart(product.id, userid)}
               >
@@ -127,7 +127,14 @@ const ProductCard = (props) => {
 
       {/* Desktop View (hidden sm:block) - Unchanged                            */}
       <div className="hidden sm:block w-full max-w-xs overflow-hidden rounded-xl border bg-white shadow-sm hover:cursor-pointer relative">
-        <div onClick={() => navigate(`/product/${productId}`, { state: { product } })}>
+        <div onClick={() => {
+          if (userType === "Customer") {
+            navigate(`/product/${productId}`, { state: { product } })
+          }
+          else {
+            navigate(`/seller/product/${productId}`, { state: { product } })
+          }
+        }}>
           <div className="relative flex justify-center items-center">
             <img
               className="h-52 object-contain rounded-md"
@@ -142,7 +149,14 @@ const ProductCard = (props) => {
           </div>
         </div>
         <div className="p-4">
-          <div onClick={() => navigate(`/product/${productId}`, { state: { product } })}>
+          <div onClick={() => {
+            if (userType === "Customer") {
+              navigate(`/product/${productId}`, { state: { product } })
+            }
+            else {
+              navigate(`/seller/product/${productId}`, { state: { product } })
+            }
+          }}>
             <div className="flex items-baseline justify-between">
               <h3 className="truncate text-lg font-semibold text-gray-800" title={product.brand}>
                 {product.brand}
@@ -167,10 +181,10 @@ const ProductCard = (props) => {
                   <button
                     disabled
                     className={`flex-1 rounded-md py-2 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 ${cartMessage.type === "success"
-                        ? "bg-green-600 text-white"
-                        : cartMessage.type === "error"
-                          ? "bg-red-600 text-white"
-                          : "bg-gray-600 text-white cursor-wait"
+                      ? "bg-green-600 text-white"
+                      : cartMessage.type === "error"
+                        ? "bg-red-600 text-white"
+                        : "bg-gray-600 text-white cursor-wait"
                       }`}
                   >
                     {cartMessage.type === "success" ? (
@@ -186,8 +200,8 @@ const ProductCard = (props) => {
                   <button
                     disabled={product.stock <= 0}
                     className={`flex-1 rounded-md py-2 text-sm font-semibold transition-all duration-300 ${product.stock > 0
-                        ? "bg-gray-800 text-white hover:bg-gray-900"
-                        : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                      ? "bg-gray-800 text-white hover:bg-gray-900"
+                      : "bg-gray-400 text-gray-200 cursor-not-allowed"
                       }`}
                     onClick={() => AddtoCart(product.id, userid)}
                   >

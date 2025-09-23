@@ -55,11 +55,11 @@ const ProductDetails = () => {
     }
 
     return (
-        <div className="bg-white">
+        <div className="bg-[#CFD8DC]">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 <div className="flex flex-col lg:flex-row gap-10 lg:gap-16">
                     <div className="lg:w-2/5 xl:w-1/3 lg:sticky top-8 self-start">
-                        <div className="bg-gray-100 rounded-lg overflow-hidden">
+                        <div className="bg-gray-100 shadow-lg rounded-lg overflow-hidden">
                             <img
                                 src={product.imageurl || product.image}
                                 alt={product.pname}
