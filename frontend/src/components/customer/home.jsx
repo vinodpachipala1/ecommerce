@@ -1,9 +1,10 @@
 import { useOutletContext } from "react-router-dom";
 import axios from "axios";
 import { useEffect, useState, useMemo } from "react";
-import { ArrowUpDown } from 'lucide-react';
+
 import { BASE_URL } from "../path";
 import ProductCard from "../common pages/ProductCard";
+import { socket } from "../socket";
 import {
   HiExclamationCircle,
   HiDeviceMobile,
@@ -36,11 +37,15 @@ const CustomerHome = () => {
   const [error, setError] = useState(null);
 
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [sortOption, setSortOption] = useState("default");
+  const [sortOption, setSortOption] = useState("");
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [brands, setBrands] = useState([]);
-  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [selectedBrand, setSelectedBrand] = useState("All");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const [page, setPage] = useState(1);
+
+  const [totalPages, setTotalPages] = useState(1);
 
   const categories = [
     { name: "All", icon: <HiCollection className="w-5 h-5 inline mr-2" /> },
@@ -52,64 +57,121 @@ const CustomerHome = () => {
     { name: "Books & Stationery", icon: <HiBookOpen className="w-5 h-5 inline mr-2" /> }
   ];
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await axios.get(`${BASE_URL}/getProducts`);
-        if (res.data) {
-          setProducts(res.data.products);
-          const uniqueBrands = [...new Set(res.data.products.map(p => p.brand))];
-          setBrands(uniqueBrands);
+  const [search, setSearch] = useState("");
+
+  const fetchProducts = async (
+    searchValue = "",
+    currentPage = page
+  ) => {
+    try {
+      setLoading(true);
+
+      const res = await axios.get(`${BASE_URL}/product/getProducts`, {
+        params: {
+          search: searchValue,
+          selectedCategory,
+          min: priceRange.min,
+          max: priceRange.max,
+          brand: selectedBrand,
+          sort: sortOption,
+          page: currentPage
         }
-      } catch (err) {
-        console.error("Error fetching products:", err);
-        setError("Could not load products. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
+      });
+      console.log(res.data)
+      setProducts(res.data.products);
+      setTotalPages(res.data.totalPages);
+    } catch (err) {
+      setError("Error loading products");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  useEffect(() => {
+    fetchProducts(search);
+  }, [selectedCategory, priceRange, sortOption, page, selectedBrand]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedCategory, sortOption, priceRange, search, selectedBrand]);
+
+  const fetchBrands = async () => {
+
+    try {
+
+      const res = await axios.get(
+        `${BASE_URL}/product/getBrands`,
+        {
+          params: {
+            search,
+            selectedCategory,
+            min: priceRange.min,
+            max: priceRange.max
+          }
+        }
+      );
+
+      setBrands(
+        res.data.brands.map(
+          (b) => b.brand
+        )
+      );
+
+    } catch (err) {
+
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+
+    fetchBrands();
+
+  }, [
+    search,
+    selectedCategory,
+    priceRange
+  ]);
+
+  const handleBrandChange = (brand) => {
+
+    if (selectedBrand === brand) {
+      setSelectedBrand("All");
+    } else {
+      setSelectedBrand(brand);
+    }
+  };
+
+  useEffect(() => {
+    socket.on("productAdded", (newProduct) => {
+      setProducts((prev) => [newProduct, ...prev]);
+    });
+
+    socket.on("productDeleted", ({ productId }) => {
+      setProducts((prev) =>
+        prev.filter((p) => p.id !== productId)
+      );
+    });
+
+    socket.on(
+      "stockUpdated",
+      ({ productId, stock }) => {
+        setProducts((prevProducts) =>
+          prevProducts.map((product) => product.id === productId ? {
+                ...product, stock
+              } : product
+          )
+        );
+      });
+
+    return () => {
+      socket.off("productAdded");
+      socket.off("productDeleted");
+      socket.off("stockUpdated");
     };
-    fetchProducts();
   }, []);
 
-
-
-  const filteredProducts = useMemo(() => {
-    let processedProducts = [...products];
-    if (selectedCategory !== "All") {
-      processedProducts = processedProducts.filter(p => p.category === selectedCategory);
-    }
-    if (selectedBrands.length > 0) {
-      processedProducts = processedProducts.filter(p => selectedBrands.includes(p.brand));
-    }
-    const minPrice = parseFloat(priceRange.min);
-    const maxPrice = parseFloat(priceRange.max);
-    if (!isNaN(minPrice)) {
-      processedProducts = processedProducts.filter(p => parseFloat(p.price) >= minPrice);
-    }
-    if (!isNaN(maxPrice)) {
-      processedProducts = processedProducts.filter(p => parseFloat(p.price) <= maxPrice);
-    }
-    switch (sortOption) {
-      case "price-asc":
-        processedProducts.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-        break;
-      case "price-desc":
-        processedProducts.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-        break;
-      default:
-        break;
-    }
-    return processedProducts;
-  }, [products, selectedCategory, selectedBrands, priceRange, sortOption]);
-
-  const handleBrandChange = (e) => {
-    const { value, checked } = e.target;
-    setSelectedBrands(prev =>
-      checked ? [...prev, value] : prev.filter(brand => brand !== value)
-    );
-  };
 
   return (
     <div>
@@ -135,6 +197,27 @@ const CustomerHome = () => {
         </div>
       </div>
 
+      <div className="px-6 mt-4 flex gap-2">
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              fetchProducts(search);
+            }
+          }}
+          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-800"
+        />
+
+        <button
+          onClick={() => fetchProducts(search)}
+          className="px-5 py-3 bg-gray-800 text-white rounded-md hover:bg-gray-700"
+        >
+          Search
+        </button>
+      </div>
 
       <div className="m-6 x-12 mb-6 flex items-center justify-between">
 
@@ -144,9 +227,9 @@ const CustomerHome = () => {
           className="p-2 border rounded-md sm:block hidden text-sm focus:outline-none focus:ring-2 focus:ring-gray-800"
         >
 
-          <option value="default" > Sort by relevance</option>
-          <option value="price-asc">Price: Low to High</option>
-          <option value="price-desc">Price: High to Low</option>
+          <option value="" > Sort by relevance</option>
+          <option value="ASC">Price: Low to High</option>
+          <option value="DESC">Price: High to Low</option>
         </select>
 
         <select
@@ -190,11 +273,24 @@ const CustomerHome = () => {
             <div>
               <p className="font-semibold text-sm mb-2">Brands</p>
               <div className="space-y-2 max-h-64 overflow-y-auto">
-                {brands.map(brand => (
-                  <label key={brand} className="flex items-center text-sm gap-2">
-                    <input type="checkbox" value={brand} checked={selectedBrands.includes(brand)} onChange={handleBrandChange} className="rounded text-gray-800 focus:ring-gray-800" />
+                {brands.map((brand) => (
+
+                  <label
+                    key={brand}
+                    className="flex items-center text-sm gap-2 cursor-pointer"
+                  >
+
+                    <input
+                      type="checkbox"
+                      checked={selectedBrand === brand}
+                      onChange={() => handleBrandChange(brand)}
+                      className="rounded text-gray-800 focus:ring-gray-800"
+                    />
+
                     {brand}
+
                   </label>
+
                 ))}
               </div>
             </div>
@@ -213,16 +309,48 @@ const CustomerHome = () => {
             <p className="font-semibold">{error}</p>
           </div>
         )}
-        {!loading && !error && filteredProducts.length === 0 && (
+        {!loading && !error && products.length === 0 && (
           <div className="col-span-full text-center text-gray-500 py-16">
             <HiExclamationCircle className="w-10 h-10 mx-auto mb-2 text-gray-400" />
             <p className="font-semibold text-xl">No products found in this category.</p>
           </div>
         )}
-        {!loading && !error && filteredProducts.length > 0 &&
-          filteredProducts.map((product) => (
+        {!loading && !error && products.length > 0 &&
+          products.map((product) => (
             <ProductCard key={product.id} userType="Customer" userid={user.id} product={product} />
           ))}
+      </div>
+
+      <div className="flex justify-center items-center gap-3 mb-10">
+
+        <button
+          disabled={page === 1}
+          onClick={() => setPage(prev => prev - 1)}
+          className={`px-4 py-2 rounded-md border
+      ${page === 1
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-gray-800 text-white hover:bg-gray-700"}
+    `}
+        >
+          Prev
+        </button>
+
+        <span className="font-semibold">
+          Page {page} of {totalPages}
+        </span>
+
+        <button
+          disabled={page === totalPages}
+          onClick={() => setPage(prev => prev + 1)}
+          className={`px-4 py-2 rounded-md border
+          ${page === totalPages
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-gray-800 text-white hover:bg-gray-700"}
+          `}
+        >
+          Next
+        </button>
+
       </div>
     </div>
   );

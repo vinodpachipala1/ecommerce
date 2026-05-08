@@ -16,28 +16,46 @@ const CustomerDashboard = () => {
         role: "",
         name: ""
     })
+    
     const [isAuthLoading, setIsAuthLoading] = useState(true);
 
     useEffect(() => {
+        const token = localStorage.getItem('token');
+            
         const verify = async () => {
             try {
-                const res = await axios.get(`${BASE_URL}/verifyLogin`, { withCredentials: true, });
-                if (res.data.user) {
-                    setUser(res.data.user);
+                const res = await axios.get(`${BASE_URL}/auth/verifyLogin`, 
+                    { 
+                        headers: { Authorization: `Bearer ${token}` 
+                    }, 
+                    withCredentials: true, 
+                });
+                console.log(res);
+                if (res.data) {
+                    setUser(res.data);
                     setloginorout("Logout")
                 }
             } catch (err) {
+                localStorage.removeItem("token");
+                setUser(null);
                 console.error("Error verifying login:", err);
             } finally {
                 setIsAuthLoading(false);
             }
         };
-        verify();
+        if (token) {
+            verify();
+        } else {
+            setIsAuthLoading(false);
+        }
+        
     }, []);
 
     const Logout = async (e) => {
-        const res = await axios.get(`${BASE_URL}/logout`, { withCredentials: true });
+        localStorage.removeItem("token");
+        setUser(null);
         alert("Logout Success full");
+        navigate("/")
         setloginorout("Login")
     }
 

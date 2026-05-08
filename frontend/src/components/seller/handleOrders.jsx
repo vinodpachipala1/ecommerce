@@ -3,8 +3,10 @@ import { Package, Truck, CheckCircle2, MoreVertical, Import } from 'lucide-react
 import { BASE_URL } from "../path";
 import axios from 'axios';
 import { useOutlet, useOutletContext } from 'react-router-dom';
+import { socket } from "../socket";
 
 const SellerOrders = () => {
+
     const { user } = useOutletContext();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -13,12 +15,35 @@ const SellerOrders = () => {
 
 
     useEffect(() => {
+        socket.on("newOrder", async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const res = await axios.get(
+                    `${BASE_URL}/sellerOrder/getOrdersReceived`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setOrders(res.data.orders);
+            } catch (err) {
+                console.log(err);
+            }
+        });
+
+        return () => {
+            socket.off("newOrder");
+        };
+    }, []);
+
+    useEffect(() => {
         const getOrders = async () => {
             if (user?.role === "Seller") {
                 try {
                     setLoading(true);
-                    const res = await axios.post(`${BASE_URL}/getOrdresReceived`, { sellerId: user.id }, { withCredentials: true });
-                    console.log(res.data.orders)
+                    const token = localStorage.getItem("token");
+                    const res = await axios.get(
+                        `${BASE_URL}/sellerOrder/getOrdersReceived`,
+                        { headers: { Authorization: `Bearer ${token}` } }
+                    );
+                    console.log(res.data.orders);
                     setOrders(res.data.orders);
                 } catch (err) {
                     setError('Failed to fetch orders. Please try again later.');
@@ -26,23 +51,44 @@ const SellerOrders = () => {
                     setLoading(false);
                 }
             }
-
         };
+
         if (user) {
             getOrders();
         }
     }, [user]);
 
-
-    const handleStatusChange = async (orderId, newStatus) => {
+    const handleStatusChange = async (
+        orderId,
+        newStatus
+    ) => {
         setOrders(prevOrders =>
             prevOrders.map(order =>
-                order.id === orderId ? { ...order, status: newStatus } : order
+                order.id === orderId
+                    ? {
+                        ...order,
+                        status: newStatus
+                    }
+                    : order
             )
         );
+
         try {
-            const result = await axios.post(`${BASE_URL}/updateOrdreStatus`, {orderId, newStatus}, {withCredentials : true});
-            console.log(`Order ${orderId} status changed to ${newStatus}`);
+
+            const token =
+                localStorage.getItem("token");
+
+            await axios.put(`${BASE_URL}/sellerOrder/updateOrderStatus`,
+                { orderId, newStatus },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+            console.log(
+                `Order ${orderId} status changed to ${newStatus}`
+            );
         } catch (err) {
             console.error('Failed to update status:', err);
         }
@@ -52,7 +98,9 @@ const SellerOrders = () => {
         if (filterStatus === 'All') {
             return orders;
         }
-        return orders.filter(order => order.status === filterStatus);
+        return orders.filter(
+            order => order.status === filterStatus
+        );
     }, [orders, filterStatus]);
 
     const getStatusBadgeClass = (status) => {
@@ -70,7 +118,13 @@ const SellerOrders = () => {
         }
     };
 
-    const filterTabs = ['All', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
+    const filterTabs = [
+        'All',
+        'Processing',
+        'Shipped',
+        'Out for Delivery',
+        'Delivered'
+    ];
 
     if (loading) {
         return (
@@ -81,14 +135,17 @@ const SellerOrders = () => {
     }
 
     if (error) {
-        return <div className="text-center p-10 text-red-600 bg-red-50 rounded-lg">{error}</div>;
+        return (
+            <div className="text-center p-10 text-red-600 bg-red-50 rounded-lg"> {error} </div>
+        );
     }
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
             <div className="max-w-7xl mx-auto">
-                <h1 className="text-3xl font-bold text-gray-800 mb-6">Manage Orders</h1>
-
+                <h1 className="text-3xl font-bold text-gray-800 mb-6">
+                    Manage Orders
+                </h1>
                 <div className="mb-4">
                     <div className="border-b border-gray-200">
                         <nav className="-mb-px flex space-x-6">
@@ -107,39 +164,67 @@ const SellerOrders = () => {
                         </nav>
                     </div>
                 </div>
-
-
                 <div className="bg-white shadow-md rounded-lg overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Order ID
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Product
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Date
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Customer
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Total
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Status
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Action
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {filteredOrders.length > 0 ? (
                                     filteredOrders.map(order => (
                                         <tr key={order.id}>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.order_group_id}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {order.order_group_id}
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                 <div className="flex items-center">
-                                                    <img className="h-10 w-10 rounded-md object-cover mr-4" src={order.imageurl || order.image} alt={order.product_name} />
+                                                    <img
+                                                        className="h-10 w-10 rounded-md object-cover mr-4"
+                                                        src={order.imageurl || order.image}
+                                                        alt={order.product_name}
+                                                    />
                                                     <div>
-                                                        <div>{order.product_name}</div>
-                                                        <div className="text-xs text-gray-500">Qty: {order.quantity}</div>
+                                                        <div>
+                                                            {order.product_name}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            Qty: {order.quantity}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString()}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.customer_name}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">${(order.quantity * order.price).toFixed(2)}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {new Date(order.created_at).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {order.customer_name}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                                ${(order.quantity * order.price).toFixed(2)}
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(order.status)}`}>
                                                     {order.status}
@@ -148,21 +233,38 @@ const SellerOrders = () => {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <select
                                                     value={order.status}
-                                                    onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                                                    onChange={(e) =>
+                                                        handleStatusChange(
+                                                            order.id,
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     className="p-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                                 >
-                                                    <option value="Processing">Processing</option>
-                                                    <option value="Shipped">Shipped</option>
-                                                    <option value="Out for Delivery">Out for Delivery</option>
-                                                    <option value="Delivered">Delivered</option>
+                                                    <option value="Processing">
+                                                        Processing
+                                                    </option>
+                                                    <option value="Shipped">
+                                                        Shipped
+                                                    </option>
+                                                    <option value="Out for Delivery">
+                                                        Out for Delivery
+                                                    </option>
+                                                    <option value="Delivered">
+                                                        Delivered
+                                                    </option>
                                                 </select>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="7" className="text-center py-10 text-gray-500">
+                                        <td
+                                            colSpan="7"
+                                            className="text-center py-10 text-gray-500"
+                                        >
                                             No orders found for this filter.
+
                                         </td>
                                     </tr>
                                 )}

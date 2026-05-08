@@ -12,6 +12,7 @@ const Login = () => {
     const [userType, setuserType] = useState("Customer");
     const [log, setlog] = useState({ email: "", password: "" });
     const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleOnChange = (e) => {
         const { name, value } = e.target;
@@ -25,18 +26,26 @@ const Login = () => {
     const login = async (e) => {
         e.preventDefault();
         setError("");
+        setIsLoading(true);
         try {
-            const res = await axios.post(`${BASE_URL}/login`, { log, userType }, { withCredentials: true });
+            const result = await axios.post(
+                `${BASE_URL}/auth/login`,
+                { log, userType },
+                { withCredentials: true }
+            );
             if (userType === "Seller") {
                 navigate("/seller/home");
             } else {
                 navigate("/");
             }
+            localStorage.setItem("token", result.data.token);
         } catch (err) {
             console.log(err);
             setError(
                 err.response?.data?.message || "Invalid email or password. Please try again."
             );
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -59,7 +68,8 @@ const Login = () => {
                                 : "bg-[#B0BEC5] text-[#37474F]"
                             } rounded-[10px_0px_0px_10px]`}
                         onClick={() => setuserType("Customer")}
-                        id="customerBtn "
+                        id="customerBtn"
+                        disabled={isLoading}
                     >
                         Customer
                     </button>
@@ -70,6 +80,7 @@ const Login = () => {
                             } rounded-[0px_10px_10px_0px]`}
                         onClick={() => setuserType("Seller")}
                         id="sellerBtn"
+                        disabled={isLoading}
                     >
                         Seller
                     </button>
@@ -82,6 +93,7 @@ const Login = () => {
                         name="email"
                         placeholder="Email"
                         required
+                        disabled={isLoading}
                     />
                     <input
                         onChange={handleOnChange}
@@ -90,21 +102,28 @@ const Login = () => {
                         name="password"
                         placeholder="Password"
                         required
+                        disabled={isLoading}
                     />
                     <button
                         onClick={login}
-                        className="text-sm sm:text-md py-2 sm:py-3 px-4 mb-3 rounded-md w-full sm:w-fit text-center bg-[#37474F] text-white hover:bg-[#546E7A] active:scale-95 transition-all duration-200"
+                        className="text-sm sm:text-md py-2 sm:py-3 px-4 mb-3 rounded-md w-full sm:w-fit text-center bg-[#37474F] text-white hover:bg-[#546E7A] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2"
                         type="submit"
                         id="loginBtn"
+                        disabled={isLoading}
                     >
-                        Login as {userType}
+                        {isLoading ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Logging in...
+                            </>
+                        ) : (
+                            `Login as ${userType}`
+                        )}
                     </button>
-
 
                     {error && (
                         <p className="text-red-600 text-sm mt-1">{error}</p>
                     )}
-
 
                     {userType === "Customer" && (
                         <p

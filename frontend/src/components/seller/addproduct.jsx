@@ -163,7 +163,6 @@ const AddProduct = (props) => {
     const createProductFormData = (productdetails, sections, userid) => {
         const formData = new FormData();
 
-        formData.append("userid", userid);
         if (productdetails.image instanceof File) {
             formData.append("image", productdetails.image);
             formData.append("imageurl", "");
@@ -187,14 +186,20 @@ const AddProduct = (props) => {
     };
 
     const handleAddProduct = async (e) => {
+        const token = localStorage.getItem("token"); 
+       
         e.preventDefault();
+        
+        
         if (verify()) {
+           
             const formData = createProductFormData(productdetails, sections, user.id);
             try {
-                const res = await axios.post(`${BASE_URL}/addproduct`, formData);
+                
+                const res = await axios.post(`${BASE_URL}/seller/addProduct`, formData, { headers: { Authorization: `Bearer ${token}` }});
                 alert("Product added successfully!");
             } catch (err) {
-                console.log(err);
+                console.log(err.response.data.message);
                 alert("Failed to add product.");
             }
         }

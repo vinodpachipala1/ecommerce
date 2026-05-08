@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { BASE_URL } from "../path";
 import axios from "axios";
-import { useLocation, useNavigate , useOutletContext } from 'react-router-dom';
-import { HiOutlineShoppingCart, HiCheckCircle, HiXCircle, HiOutlineShieldCheck, HiOutlineScale, HiOutlineOfficeBuilding, HiOutlineExclamationCircle} from 'react-icons/hi';
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
+import { HiOutlineShoppingCart, HiCheckCircle, HiXCircle, HiOutlineShieldCheck, HiOutlineScale, HiOutlineOfficeBuilding, HiOutlineExclamationCircle } from 'react-icons/hi';
 
 const ProductDetails = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const {user} = useOutletContext();
+    const { user } = useOutletContext();
     const { product } = location.state || {};
     const [cartMessage, setCartMessage] = useState(null);
 
@@ -36,11 +36,25 @@ const ProductDetails = () => {
     const AddtoCart = async (productid, userid) => {
         setCartMessage({ type: "loading", text: "Adding..." });
         try {
-            await axios.post(`${BASE_URL}/addtoCart`, { productid:product.id, userid:user.id }, { withCredentials: true });
+            const token = localStorage.getItem("token");
+
+            await axios.post(
+                `${BASE_URL}/cart/addToCart`,
+                {
+                    productId: product.id,
+                    quantity: 1
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
             setCartMessage({ type: "success", text: "Added!" });
             setTimeout(() => setCartMessage(null), 2000);
         } catch (err) {
             setCartMessage({ type: "error", text: err.response.data });
+            console.log(err);
             setTimeout(() => setCartMessage(null), 2000);
         }
     };
@@ -49,7 +63,7 @@ const ProductDetails = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
                 <h2 className="text-2xl font-bold text-slate-700">Product not found.</h2>
-                <button className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" onClick={()=>{navigate("/")}}>Back to Homepage</button>
+                <button className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700" onClick={() => { navigate("/") }}>Back to Homepage</button>
             </div>
         );
     }
@@ -69,16 +83,16 @@ const ProductDetails = () => {
 
                         {user.id !== product.seller_id && <div className="flex gap-2 m-7">
                             {cartMessage ? (<button
-                                className={`flex-1 rounded-md  gap-1 px-4 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 text-white ${cartMessage.type === "success" ? 'bg-green-600': 'bg-red-600 ' }`}>
+                                className={`flex-1 rounded-md  gap-1 px-4 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 text-white ${cartMessage.type === "success" ? 'bg-green-600' : 'bg-red-600 '}`}>
                                 {cartMessage.type === 'success' ? <HiCheckCircle /> : cartMessage.type === 'error' ? <HiXCircle /> : <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
                                 <span>{cartMessage.text}</span>
-                            </button>):
-                            (<button
-                                disabled={product.stock === 0}
-                                className={`flex-1 flex items-center justify-center gap-1 px-4 py-3 bg-gray-800 text-white hover:bg-gray-1000 font-bold text-md rounded-lg shadow-lg transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed `} onClick={AddtoCart}>
-                                <HiOutlineShoppingCart className="w-6 h-6" />
-                                <span>{product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
-                            </button>)
+                            </button>) :
+                                (<button
+                                    disabled={product.stock === 0}
+                                    className={`flex-1 flex items-center justify-center gap-1 px-4 py-3 bg-gray-800 text-white hover:bg-gray-1000 font-bold text-md rounded-lg shadow-lg transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed `} onClick={AddtoCart}>
+                                    <HiOutlineShoppingCart className="w-6 h-6" />
+                                    <span>{product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+                                </button>)
                             }
 
                             <button
@@ -132,7 +146,7 @@ const ProductDetails = () => {
 
                         <hr className="my-6 border-slate-200" />
 
-                        
+
                         <div className="mb-6">
                             <h2 className="text-xl font-bold text-slate-800 mb-2">Seller Information</h2>
                             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">

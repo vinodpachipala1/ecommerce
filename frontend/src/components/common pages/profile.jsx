@@ -25,9 +25,9 @@ const ProfileSkeleton = () => (
 );
 
 const ProfilePage = () => {
-    const { user, isAuthLoading } = useOutletContext();
-    const navigate = useNavigate();
 
+    const navigate = useNavigate();
+    const [user, setUser] = useState(null);
     const [profileData, setProfileData] = useState(null);
     const [addressForm, setAddressForm] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -64,33 +64,38 @@ const ProfilePage = () => {
     }
 
     useEffect(() => {
-        if (isAuthLoading) {
-            return;
-        }
-        if (user && user.id) {
-            const getProfile = async () => {
 
+        const getProfile = async () => {
+            const token = localStorage.getItem('token');
+            console.log(token);
+            if (token) {
                 try {
                     setLoading(true);
                     setError(null);
-                    const res = await axios.post(`${BASE_URL}/getProfileDetails`, { userId: user.id }, { withCredentials: true });
-                    setProfileData(res.data.ProfleData);
+                    const res = await axios.get(`${BASE_URL}/auth/getProfileDetails`, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
+                    setUser(res.data.user);
+                    setProfileData(res.data.profileDetails);
                 } catch (err) {
                     console.error("Error fetching profile:", err);
                     setError("Could not load your profile.");
+                    localStorage.removeItem('token');
+                    alert("please login first");
+                    navigate('/login');
+                    
                 } finally {
                     setLoading(false);
                 }
             }
-            getProfile();
+            else {
+                localStorage.removeItem('token');
+                alert("please login first");
+                navigate('/login');
+            }
         }
-        else {
-            alert("please login first")
-            navigate('/login');
-            return;
-        }
+        getProfile();
 
-    }, [user, isAuthLoading, navigate]);
+
+    }, []);
 
     const verifyAddress = (address) => {
         if (!address) {

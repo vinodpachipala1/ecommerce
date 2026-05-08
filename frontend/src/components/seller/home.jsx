@@ -4,7 +4,7 @@ import { useOutletContext } from "react-router-dom";
 import { BASE_URL } from "../path";
 import ProductCard from "../common pages/ProductCard";
 import { HiExclamationCircle } from "react-icons/hi";
-
+import { socket } from "../socket";
 const ProductCardSkeleton = () => (
     <div className="w-full max-w-xs overflow-hidden rounded-xl border bg-white shadow-sm">
         <div className="relative h-52 w-full animate-pulse bg-gray-200"></div>
@@ -23,35 +23,48 @@ const SellerHome = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+
     useEffect(() => {
+        const token = localStorage.getItem("token");
         const getProducts = async () => {
             if (user?.role === "Seller") {
                 try {
                     setLoading(true);
                     setError(null);
-                    const res = await axios.post(`${BASE_URL}/getSellerProducts`, { seller: user.id }, { withCredentials: true });
+                    const res = await axios.get(`${BASE_URL}/seller/getallProducts`, { headers: { Authorization: `Bearer ${token}` }, withCredentials: true });
                     setProducts(res.data.products);
-                } catch (err) {
-                    console.log(err);
+                } catch (error) {
+                    console.log(error);
                     setError("Could not load your products. Please try again.");
                 } finally {
                     setLoading(false);
                 }
             }
         }
-        if(user) {
+        if (user) {
             getProducts();
         }
     }, [user]);
 
-    const deleteProduct = async (productid) => {
-        setProducts(prev => prev.filter(product => product.id !== productid));
-        try {
-            await axios.delete(`${BASE_URL}/deleteProduct`, { data: { productid }, withCredentials: true });
-        } catch (err) {
-            console.log(err);
-        }
-    }
+    useEffect(() => {
+        socket.on("stockUpdated", (data) => {
+            setProducts((prev) =>
+                prev.map((p) =>
+                    p.id === data.productId
+                        ? { ...p, stock: data.stock }
+                        : p
+                )
+            );
+        });
+
+        return () => {
+            socket.off("stockUpdated");
+        };
+    }, []);
+
+    
+
+    
 
     return (
         <div>
@@ -72,11 +85,11 @@ const SellerHome = () => {
                     </div>
                 ) : (
                     products.map((product) => (
-                        <ProductCard 
-                            key={product.id} 
-                            userType={user.role} 
-                            product={product} 
-                            deleteProduct={deleteProduct} 
+                        <ProductCard
+                            key={product.id}
+                            userType={user.role}
+                            product={product}
+                            setProducts={setProducts}
                         />
                     ))
                 )}

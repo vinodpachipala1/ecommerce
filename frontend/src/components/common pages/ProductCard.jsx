@@ -10,6 +10,7 @@ const ProductCard = (props) => {
   const productId = product.id;
 
   const [cartMessage, setCartMessage] = useState(null);
+  const [dltMessage, setDltMessage] = useState(null);
 
   const StockVal = (stock) => {
     if (stock >= 10) {
@@ -24,14 +25,36 @@ const ProductCard = (props) => {
   const AddtoCart = async (productid, userid) => {
     setCartMessage({ type: "loading", text: "Adding..." });
     try {
-      await axios.post(`${BASE_URL}/addtoCart`, { productid, userid }, { withCredentials: true });
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${BASE_URL}/cart/addToCart`,
+        { productId: productid, quantity: 1 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setCartMessage({ type: "success", text: "Added!" });
       setTimeout(() => setCartMessage(null), 2000);
     } catch (err) {
-      setCartMessage({ type: "error", text: err.response?.data || "Error" });
+      setCartMessage({ type: "error", text: "Error" });
       setTimeout(() => setCartMessage(null), 2000);
     }
   };
+
+  const deleteProduct = async (productid) => {
+    const token = localStorage.getItem("token");
+    setDltMessage({ type: "deleting", text: "Deleting..." });
+    try {
+      await axios.delete(`${BASE_URL}/seller/deleteProduct`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { productid }
+      });
+      props.setProducts(prev => prev.filter(product => product.id !== productid));
+      setDltMessage({ type: "success", text: "Deleted!" });
+    } catch (err) {
+      setDltMessage(null);
+      alert("err deleting product");
+      console.log(err);
+    }
+  }
 
   if (userid && userid === product.seller_id) {
     return null;
@@ -48,7 +71,9 @@ const ProductCard = (props) => {
             onClick={() => navigate(`/product/${productId}`, { state: { product } })}
           />
           <div className="flex-1 min-w-0">
-            <h4 className="truncate text-xs font-medium text-gray-500">{product.brand}</h4>
+            <h4 className="truncate text-xs font-medium text-gray-500">
+              {product.brand}
+            </h4>
             <h3
               className="truncate text-sm font-semibold text-gray-800"
               onClick={() => navigate(`/product/${productId}`, { state: { product } })}
@@ -57,12 +82,7 @@ const ProductCard = (props) => {
             </h3>
             <p className="text-xs text-gray-500">₹ {product.price}</p>
             <span
-              className={`mt-1 inline-block text-xs font-medium ${StockVal(product.stock).color.replace(
-                "bg-",
-                "text-"
-              ).replace("-400", "-700")} px-2 py-0.5 rounded ${StockVal(product.stock).color
-                .replace("text-", "bg-")
-                .replace("-900", "-100")}`}
+              className={`mt-1 inline-block text-xs font-medium ${StockVal(product.stock).color.replace("bg-", "text-").replace("-400", "-700")} px-2 py-0.5 rounded ${StockVal(product.stock).color.replace("text-", "bg-").replace("-900", "-100")}`}
             >
               {StockVal(product.stock).text}
             </span>
@@ -74,12 +94,7 @@ const ProductCard = (props) => {
             {cartMessage ? (
               <button
                 disabled
-                className={`flex-1 text-xs rounded-md py-2 px-2 flex items-center justify-center gap-1 transition-all duration-300 ${cartMessage.type === "success"
-                  ? "bg-green-600 text-white"
-                  : cartMessage.type === "error"
-                    ? "bg-red-600 text-white"
-                    : "bg-gray-600 text-white"
-                  }`}
+                className={`flex-1 text-xs rounded-md py-2 px-2 flex items-center justify-center gap-1 transition-all duration-300 ${cartMessage.type === "success" ? "bg-green-600 text-white" : cartMessage.type === "error" ? "bg-red-600 text-white" : "bg-gray-600 text-white"}`}
               >
                 {cartMessage.type === "loading" && (
                   <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -91,10 +106,7 @@ const ProductCard = (props) => {
             ) : (
               <button
                 disabled={product.stock <= 0}
-                className={`flex-1 text-xs rounded-md py-2 px-2 ${product.stock > 0
-                  ? "bg-gray-800 text-white"
-                  : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                  }`}
+                className={`flex-1 text-xs rounded-md py-2 px-2 ${product.stock > 0 ? "bg-gray-800 text-white" : "bg-gray-400 text-gray-200 cursor-not-allowed"}`}
                 onClick={() => AddtoCart(product.id, userid)}
               >
                 {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
@@ -108,33 +120,44 @@ const ProductCard = (props) => {
           <div className="flex m-2 gap-2 pl-4 pr-4">
             <button
               className="flex-1 rounded-md bg-green-700 text-white py-2 text-xs font-semibold hover:bg-green-800"
-              onClick={() =>
-                navigate("/editproduct", { state: { product, type: "edit" } })
-              }
+              onClick={() => navigate("/editproduct", { state: { product, type: "edit" } })}
             >
               Edit
             </button>
-            <button
-              className="flex-1 rounded-md bg-red-700 text-white py-2 text-xs font-semibold hover:bg-red-800"
-              onClick={() => props.deleteProduct(product.id)}
-            >
-              Delete
-            </button>
+            {dltMessage ? (
+              <button
+                disabled
+                className={`flex-1 text-xs rounded-md py-2 px-2 flex items-center justify-center gap-1 transition-all duration-300 ${dltMessage.type === "success" ? "bg-green-600 text-white" : dltMessage.type === "error" ? "bg-red-600 text-white" : "bg-gray-600 text-white"}`}
+              >
+                {dltMessage.type === "deleting" && (
+                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                )}
+                {dltMessage.type === "success" && <HiCheckCircle />}
+                {dltMessage.type === "error" && <HiXCircle />}
+                <span className="truncate">{dltMessage.text}</span>
+              </button>
+            ) : (
+              <button
+                className="flex-1 rounded-md bg-red-700 text-white py-2 text-xs font-semibold hover:bg-red-800"
+                onClick={() => deleteProduct(product.id)}
+              >
+                Delete
+              </button>
+            )}
           </div>
         )}
       </div>
 
-
-      {/* Desktop View (hidden sm:block) - Unchanged                            */}
       <div className="hidden sm:block w-full max-w-xs overflow-hidden rounded-xl border bg-white shadow-sm hover:cursor-pointer relative">
-        <div onClick={() => {
-          if (userType === "Customer") {
-            navigate(`/product/${productId}`, { state: { product } })
-          }
-          else {
-            navigate(`/seller/product/${productId}`, { state: { product } })
-          }
-        }}>
+        <div
+          onClick={() => {
+            if (userType === "Customer") {
+              navigate(`/product/${productId}`, { state: { product } });
+            } else {
+              navigate(`/seller/product/${productId}`, { state: { product } });
+            }
+          }}
+        >
           <div className="relative flex justify-center items-center">
             <img
               className="h-52 object-contain rounded-md"
@@ -149,16 +172,20 @@ const ProductCard = (props) => {
           </div>
         </div>
         <div className="p-4">
-          <div onClick={() => {
-            if (userType === "Customer") {
-              navigate(`/product/${productId}`, { state: { product } })
-            }
-            else {
-              navigate(`/seller/product/${productId}`, { state: { product } })
-            }
-          }}>
+          <div
+            onClick={() => {
+              if (userType === "Customer") {
+                navigate(`/product/${productId}`, { state: { product } });
+              } else {
+                navigate(`/seller/product/${productId}`, { state: { product } });
+              }
+            }}
+          >
             <div className="flex items-baseline justify-between">
-              <h3 className="truncate text-lg font-semibold text-gray-800" title={product.brand}>
+              <h3
+                className="truncate text-lg font-semibold text-gray-800"
+                title={product.brand}
+              >
                 {product.brand}
               </h3>
               {userType === "Customer" && (
@@ -167,12 +194,19 @@ const ProductCard = (props) => {
                 </a>
               )}
             </div>
-            <p className="my-2 text-xl font-bold text-gray-900">{product.pname}</p>
+            <p className="my-2 text-xl font-bold text-gray-900">
+              {product.pname}
+            </p>
             <div className="flex flex-wrap gap-2">
               <span className="rounded bg-gray-100 px-2 py-1 text-sm font-medium text-gray-600">
                 ₹ {product.price}
               </span>
             </div>
+            {userType !== "Customer" && (
+              <p className="mt-2 text-sm font-medium text-gray-600">
+                Stock: {product.stock} units
+              </p>
+            )}
           </div>
           <div className="mt-5 flex gap-2">
             {userType === "Customer" && (
@@ -180,12 +214,7 @@ const ProductCard = (props) => {
                 {cartMessage ? (
                   <button
                     disabled
-                    className={`flex-1 rounded-md py-2 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 ${cartMessage.type === "success"
-                      ? "bg-green-600 text-white"
-                      : cartMessage.type === "error"
-                        ? "bg-red-600 text-white"
-                        : "bg-gray-600 text-white cursor-wait"
-                      }`}
+                    className={`flex-1 rounded-md py-2 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 ${cartMessage.type === "success" ? "bg-green-600 text-white" : cartMessage.type === "error" ? "bg-red-600 text-white" : "bg-gray-600 text-white cursor-wait"}`}
                   >
                     {cartMessage.type === "success" ? (
                       <HiCheckCircle />
@@ -199,10 +228,7 @@ const ProductCard = (props) => {
                 ) : (
                   <button
                     disabled={product.stock <= 0}
-                    className={`flex-1 rounded-md py-2 text-sm font-semibold transition-all duration-300 ${product.stock > 0
-                      ? "bg-gray-800 text-white hover:bg-gray-900"
-                      : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                      }`}
+                    className={`flex-1 rounded-md py-2 text-sm font-semibold transition-all duration-300 ${product.stock > 0 ? "bg-gray-800 text-white hover:bg-gray-900" : "bg-gray-400 text-gray-200 cursor-not-allowed"}`}
                     onClick={() => AddtoCart(product.id, userid)}
                   >
                     {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
@@ -223,12 +249,26 @@ const ProductCard = (props) => {
                 >
                   Edit
                 </button>
-                <button
-                  className="rounded-md border bg-red-800 p-2 text-white w-full hover:text-gray-800"
-                  onClick={() => props.deleteProduct(product.id)}
-                >
-                  Delete
-                </button>
+                {dltMessage ? (
+                  <button
+                    disabled
+                    className="rounded-md border bg-gray-600 p-2 text-white w-full flex justify-center items-center gap-2"
+                  >
+                    {dltMessage.type === "deleting" && (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    )}
+                    {dltMessage.type === "success" && <HiCheckCircle />}
+                    {dltMessage.type === "error" && <HiXCircle />}
+                    {dltMessage.text}
+                  </button>
+                ) : (
+                  <button
+                    className="rounded-md border bg-red-800 p-2 text-white w-full hover:text-gray-800"
+                    onClick={() => deleteProduct(product.id)}
+                  >
+                    Delete
+                  </button>
+                )}
               </>
             )}
           </div>

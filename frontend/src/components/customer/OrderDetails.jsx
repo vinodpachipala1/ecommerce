@@ -8,20 +8,19 @@ import OrderStatusTracker from './OrderTracker';
 
 const OrderDetails = () => {
   const { orderGroupId } = useParams();
-  const { user, isAuthLoading } = useOutletContext();
+  
   const navigate = useNavigate();
   const [orderItems, setOrderItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (isAuthLoading) {
-      return;
-    }
-    if (user && user.id && orderGroupId) {
+    
+    const token = localStorage.getItem("token");
+    if (token && orderGroupId) {
       const fetchOrderDetails = async () => {
         try {
-          const res = await axios.post(`${BASE_URL}/getOrder`, { userid: user.id, orderGroupId });
+          const res = await axios.get(`${BASE_URL}/orders/getOrder/${orderGroupId}`, {headers : {Authorization : `Bearer ${token}`}});
           setOrderItems(res.data.order || []);
         } catch (err) {
           console.error("Failed to fetch order details:", err);
@@ -34,7 +33,7 @@ const OrderDetails = () => {
     } else {
       setLoading(false);
     }
-  }, [user, orderGroupId]);
+  }, [orderGroupId]);
 
   const sharedOrderInfo = useMemo(() => {
     if (orderItems.length === 0) return null;

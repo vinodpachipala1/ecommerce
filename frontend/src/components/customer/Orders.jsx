@@ -3,6 +3,7 @@ import { useOutletContext, useNavigate } from 'react-router-dom';
 import { BASE_URL } from '../path';
 import axios from "axios";
 import { HiOutlineTicket, HiOutlineCalendar, HiOutlineEye, HiOutlineShoppingBag } from 'react-icons/hi';
+import { socket } from "../socket";
 
 const OrderItemSkeleton = () => (
     <div className="bg-white rounded-lg shadow-md p-4 flex flex-col sm:flex-row gap-4 animate-pulse">
@@ -34,9 +35,10 @@ const Orders = () => {
             return;
         }
         const getOrders = async () => {
-            if (user && user.id) {
+            const token = localStorage.getItem("token");
+            if (token) {
                 try {
-                    const res = await axios.post(`${BASE_URL}/getOrders`, { userid: user.id });
+                    const res = await axios.get(`${BASE_URL}/orders/getOrders`, { headers: { Authorization: `Bearer ${token}` } });
                     const sortedItems = res.data.orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
                     setOrderItems(sortedItems);
                 } catch (err) {
@@ -54,6 +56,39 @@ const Orders = () => {
         return () => clearTimeout(timer);
 
     }, [user, navigate]);
+
+
+    useEffect(() => {
+
+        socket.on(
+            "orderStatusUpdated",
+            ({
+                orderId,
+                newStatus
+            }) => {
+
+                setOrderItems((prevOrders) =>
+                    prevOrders.map((order) =>
+
+                        order.id === orderId
+                            ? {
+                                ...order,
+                                status: newStatus
+                            }
+                            : order
+                    )
+                );
+            }
+        );
+
+        return () => {
+
+            socket.off(
+                "orderStatusUpdated"
+            );
+        };
+
+    }, []);
 
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
@@ -90,7 +125,7 @@ const Orders = () => {
                 <HiOutlineShoppingBag className="w-16 h-16 text-gray-400 mb-4" />
                 <h2 className="text-2xl font-semibold text-gray-700 mb-2">No Orders Yet</h2>
                 <p className="text-gray-500 mb-6">You haven't placed any orders with us. Let's change that!</p>
-                <button className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700" onClick={()=>navigate("/")}>Start Shopping</button>
+                <button className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700" onClick={() => navigate("/")}>Start Shopping</button>
             </div>
         );
     }
@@ -124,8 +159,8 @@ const Orders = () => {
                                 ₹{(parseFloat(item.price) * item.quantity).toLocaleString('en-IN')}
                             </p>
                             <p className="text-sm text-slate-600">Quantity: {item.quantity}</p>
-                            <button className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-200" onClick={()=>{navigate(`/order/${item.order_group_id}`)}}><HiOutlineEye /> View Order</button>
-                            
+                            <button className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-200" onClick={() => { navigate(`/order/${item.order_group_id}`) }}><HiOutlineEye /> View Order</button>
+
                         </div>
                     </div>
                 ))}

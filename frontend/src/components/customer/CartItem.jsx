@@ -40,9 +40,9 @@ const CartItem = (props) => {
 
             <div className="md:mt-4 flex items-center justify-between border-t md:pt-3">
                 <div className="flex items-center rounded-md border">
-                    <button className="px-1 md:px-3 md:py-1 font-bold text-gray-600 hover:bg-gray-100" onClick={() => QuantityDecrease(item.id)}>-</button>
+                    <button className="px-1 md:px-3 md:py-1 font-bold text-gray-600 hover:bg-gray-100" onClick={() => QuantityDecrease(item.cart_id)}>-</button>
                     <span className="w-8 md:w-10 text-center text-xs md:text-sm font-medium">{item.quantity}</span>
-                    <button className="px-1 md:px-3 md:py-1 font-bold text-gray-600 hover:bg-gray-100" onClick={() => QuantityIncrease(item.id)}>+</button>
+                    <button className="px-1 md:px-3 md:py-1 font-bold text-gray-600 hover:bg-gray-100" onClick={() => QuantityIncrease(item.cart_id)}>+</button>
                 </div>
 
 
@@ -50,7 +50,7 @@ const CartItem = (props) => {
                     <button className="flex items-center gap-1 hover:text-indigo-600">
                         <HiOutlineHeart /> Save for Later
                     </button>
-                    <button className="flex items-center gap-1 hover:text-red-600" onClick={() => removeFromCart(item.id)}>
+                    <button className="flex items-center gap-1 hover:text-red-600" onClick={() => removeFromCart(item.cart_id)}>
                         <HiOutlineTrash /> Remove
                     </button>
                 </div>

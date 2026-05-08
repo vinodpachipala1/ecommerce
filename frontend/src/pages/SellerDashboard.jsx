@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { BASE_URL } from "../components/path";
 import { useNavigate, Outlet } from "react-router-dom";
 import { MdHome, MdPerson, MdAddBox, MdLogout, MdDashboard, MdListAlt } from "react-icons/md";
+import { jwtDecode } from "jwt-decode";
 
 import AddProduct from "../components/seller/addproduct";
 
@@ -15,30 +16,36 @@ const Seller = () => {
         name: "",
     })
 
+    const verifyLogin = async () => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Please log in")
+            navigate("/login")
+        }
+        try {
+            const res = await axios.get(`${BASE_URL}/auth/verifyLogin`, { headers: { Authorization: `Bearer ${token}` } }, { withCredentials: true, });
+            if (!res.data) {
+                alert("Please log in")
+                navigate("/login")
+            }
+            if (res.data.role === "Seller") {
+                setUser(res.data);
+            } else {
+                alert("Please log in first")
+                navigate("/login")
+            }
+        } catch (err) {
+            localStorage.removeItem("token");
+            console.error("Error verifying login:", err);
+        }
+    };
 
     useEffect(() => {
-        const verifyLogin = async () => {
-            try {
-                const res = await axios.get(`${BASE_URL}/verifyLogin`, { withCredentials: true, });
-                if (!res.data.user) {
-                    alert("Please log in")
-                    navigate("/login")
-                }
-                if (res.data.user.role === "Seller") {
-                    setUser(res.data.user);
-                } else {
-                    alert("Please log in first")
-                    navigate("/login")
-                }
-            } catch (err) {
-                console.error("Error verifying login:", err);
-            }
-        };
         verifyLogin();
     }, []);
 
     const logout = async () => {
-        const res = await axios.get(`${BASE_URL}/logout`, { withCredentials: true });
+        localStorage.removeItem("token");
         navigate("/");
     }
 
@@ -56,14 +63,9 @@ const Seller = () => {
                 </button>
             </header>
 
-
-
-            
             <main className="mt-16">
                 <Outlet context={{ user }} />
             </main>
-
-
 
             <nav className="fixed z-50 bottom-0 w-full bg-white shadow-md flex justify-around items-center py-2">
                 <button
