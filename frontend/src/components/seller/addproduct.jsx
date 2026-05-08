@@ -196,7 +196,7 @@ const AddProduct = (props) => {
             const formData = createProductFormData(productdetails, sections, user.id);
             try {
                 
-                const res = await axios.post(`${BASE_URL}/seller/addProduct`, formData, { headers: { Authorization: `Bearer ${token}` }});
+                await axios.post(`${BASE_URL}/seller/addProduct`, formData, { headers: { Authorization: `Bearer ${token}` }});
                 alert("Product added successfully!");
             } catch (err) {
                 console.log(err.response.data.message);
@@ -211,7 +211,7 @@ const AddProduct = (props) => {
         if (verify()) {
             const formData = createProductFormData(productdetails, sections, user.id);
             try {
-                const res = await axios.put(`${BASE_URL}/updateProductDetails/${productdetails.id}`, formData);
+                await axios.put(`${BASE_URL}/updateProductDetails/${productdetails.id}`, formData);
                 alert("Product details updated successfully!");
             } catch (err) {
                 console.log(err);

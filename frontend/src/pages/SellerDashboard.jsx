@@ -37,9 +37,9 @@ const Seller = () => {
         }
     };
 
-    // eslint-disable-next-line
     useEffect(() => {
         verifyLogin();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const logout = async () => {

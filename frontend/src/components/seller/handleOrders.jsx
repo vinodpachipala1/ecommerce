@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Package, Truck, CheckCircle2, MoreVertical, Import } from 'lucide-react';
+
 import { BASE_URL } from "../path";
 import axios from 'axios';
-import { useOutlet, useOutletContext } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import { socket } from "../socket";
 
 const SellerOrders = () => {
