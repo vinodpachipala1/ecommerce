@@ -3,9 +3,6 @@ import React, { useEffect, useState } from "react";
 import { BASE_URL } from "../components/path";
 import { useNavigate, Outlet } from "react-router-dom";
 import { MdHome, MdPerson, MdAddBox, MdLogout, MdDashboard, MdListAlt } from "react-icons/md";
-import { jwtDecode } from "jwt-decode";
-
-import AddProduct from "../components/seller/addproduct";
 
 const Seller = () => {
     const navigate = useNavigate();
@@ -40,6 +37,7 @@ const Seller = () => {
         }
     };
 
+    // eslint-disable-next-line
     useEffect(() => {
         verifyLogin();
     }, []);
@@ -113,10 +111,19 @@ const Seller = () => {
             <footer className="bg-[#37474F] w-full mt-auto text-center mb-16">
                 <div className="m-auto">
                     <p className="text-sm lg:text-xl font-medium text-[#ECEFF1] mt-3">PrimeCart &copy; 2025 | All Rights Reserved</p>
-                    <p className="text-[#cfd8dc] m-2 text-xs lg:text-base" >
-                        <a className="text-[#f8b400] m-1 hover:underline" href="#">Privacy Policy</a> |
-                        <a className="text-[#f8b400] m-1 hover:underline" href="#">Terms of Service</a> |
-                        <a className="text-[#f8b400] m-1 hover:underline" href="#">Contact Us</a>
+                    <p className="text-[#cfd8dc] m-2 text-xs lg:text-base">
+                        <button className="text-[#f8b400] m-1 hover:underline">
+                            Privacy Policy
+                        </button>
+                        |
+                        <button className="text-[#f8b400] m-1 hover:underline">
+                            Terms of Service
+                        </button>
+
+                        |
+                        <button className="text-[#f8b400] m-1 hover:underline">
+                            Contact Us
+                        </button>
                     </p>
                 </div>
             </footer>

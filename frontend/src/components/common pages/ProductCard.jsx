@@ -189,9 +189,9 @@ const ProductCard = (props) => {
                 {product.brand}
               </h3>
               {userType === "Customer" && (
-                <a href="#" className="text-xs text-gray-500 hover:underline">
+                <span className="text-xs text-gray-500 hover:underline">
                   Sold by {product.seller_name}
-                </a>
+                </span>
               )}
             </div>
             <p className="my-2 text-xl font-bold text-gray-900">
@@ -278,4 +278,4 @@ const ProductCard = (props) => {
   );
 };
 
-export default ProductCard;
+export default ProductCard; 

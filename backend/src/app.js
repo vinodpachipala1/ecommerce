@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 
 import { userRoutes } from "./Routes/userRoutes.js";
-import { productRoutes } from "./Routes/ProductRoutes.js";
+import { productRoutes } from "./Routes/productRoutes.js";
 import { sellerProductsRoutes } from "./Routes/sellerProductRoutes.js";
 import { cartRoutes } from "./Routes/cartRoutes.js";
 import { orderRoutes } from "./Routes/orderRoutes.js";

@@ -5,10 +5,11 @@ import { processProductsWithImages } from "../Middleware/ProcessingImage.js";
 export const getallProductsController = async (req, res) => {
 
     try {
-
+        const userId = req.user?.id || null;
+        
         const { search, selectedCategory, min, max, brand, sort, page } = req.query;
     
-        const result = await getallProductsService( search, selectedCategory, min, max, brand, sort, page );
+        const result = await getallProductsService( search, selectedCategory, min, max, brand, sort, userId, page );
 
         const productsWithImages =
             processProductsWithImages(result.rows);

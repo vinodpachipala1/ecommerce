@@ -1,6 +1,6 @@
 import { useOutletContext } from "react-router-dom";
 import axios from "axios";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 
 import { BASE_URL } from "../path";
 import ProductCard from "../common pages/ProductCard";
@@ -44,7 +44,6 @@ const CustomerHome = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const [page, setPage] = useState(1);
-
   const [totalPages, setTotalPages] = useState(1);
 
   const categories = [
@@ -65,6 +64,7 @@ const CustomerHome = () => {
   ) => {
     try {
       setLoading(true);
+      const token = localStorage.getItem("token");
 
       const res = await axios.get(`${BASE_URL}/product/getProducts`, {
         params: {
@@ -75,7 +75,7 @@ const CustomerHome = () => {
           brand: selectedBrand,
           sort: sortOption,
           page: currentPage
-        }
+        }, headers: { Authorization: `Bearer ${token}` }
       });
       console.log(res.data)
       setProducts(res.data.products);
@@ -90,6 +90,7 @@ const CustomerHome = () => {
 
   useEffect(() => {
     fetchProducts(search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, priceRange, sortOption, page, selectedBrand]);
 
   useEffect(() => {
@@ -97,9 +98,7 @@ const CustomerHome = () => {
   }, [selectedCategory, sortOption, priceRange, search, selectedBrand]);
 
   const fetchBrands = async () => {
-
     try {
-
       const res = await axios.get(
         `${BASE_URL}/product/getBrands`,
         {
@@ -119,15 +118,13 @@ const CustomerHome = () => {
       );
 
     } catch (err) {
-
       console.log(err);
     }
   };
 
   useEffect(() => {
-
     fetchBrands();
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     search,
     selectedCategory,
@@ -135,7 +132,6 @@ const CustomerHome = () => {
   ]);
 
   const handleBrandChange = (brand) => {
-
     if (selectedBrand === brand) {
       setSelectedBrand("All");
     } else {
@@ -159,8 +155,8 @@ const CustomerHome = () => {
       ({ productId, stock }) => {
         setProducts((prevProducts) =>
           prevProducts.map((product) => product.id === productId ? {
-                ...product, stock
-              } : product
+            ...product, stock
+          } : product
           )
         );
       });
@@ -317,7 +313,7 @@ const CustomerHome = () => {
         )}
         {!loading && !error && products.length > 0 &&
           products.map((product) => (
-            <ProductCard key={product.id} userType="Customer" userid={user.id} product={product} />
+            <ProductCard key={product.id} userType="Customer" userid={user?.id} product={product} />
           ))}
       </div>
 

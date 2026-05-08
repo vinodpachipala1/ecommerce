@@ -2,8 +2,8 @@ import React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { BASE_URL } from "../path";
-import { useOutletContext, useNavigate } from "react-router-dom";
-import { HiUserCircle, HiOutlineHome, HiOutlineOfficeBuilding, HiOutlinePencil, HiOutlinePlus } from 'react-icons/hi';
+import { useNavigate } from "react-router-dom";
+import { HiUserCircle, HiOutlineHome, HiOutlineOfficeBuilding } from 'react-icons/hi';
 
 const ProfileSkeleton = () => (
     <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 animate-pulse">
@@ -60,7 +60,7 @@ const ProfilePage = () => {
         }))
         setAddressErros((prev) => ({
             ...prev, [name]: "",
-        }))
+        })) 
     }
 
     useEffect(() => {
@@ -93,9 +93,7 @@ const ProfilePage = () => {
             }
         }
         getProfile();
-
-
-    }, []);
+    }, [navigate]);
 
     const verifyAddress = (address) => {
         if (!address) {

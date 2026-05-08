@@ -1,9 +1,15 @@
 import db from '../server/db.js';
 
-export const buildProductFilters = (search, selectedCategory, min, max) => {
+export const buildProductFilters = (search, selectedCategory, min, max, userId) => {
     let where = `WHERE p.is_deleted IS NOT TRUE`;
     const values = [];
     let ind = 1;
+
+    if (userId) {
+        where += ` AND p.seller_id != $${ind}`;
+        values.push(userId);
+        ind++;
+    }
 
     if (search && search.trim() !== "") {
         where += ` AND (p.pname ILIKE $${ind} OR p.brand ILIKE $${ind} OR p.description ILIKE $${ind} OR p.id IN (SELECT product_id FROM product_tags WHERE tag ILIKE $${ind}))`;
@@ -32,12 +38,12 @@ export const buildProductFilters = (search, selectedCategory, min, max) => {
     return { where, values, ind };
 };
 
-export const getallProductsModule = async (search, selectedCategory, min, max, brand, sort, page = 1) => {
+export const getallProductsModule = async (search, selectedCategory, min, max, brand, sort, userId = null, page = 1) => {
     const limit = 20;
     const safePage = Math.max(1, parseInt(page) || 1);
     const offset = (safePage - 1) * limit;
 
-    let { where, values, ind } = buildProductFilters(search, selectedCategory, min, max);
+    let { where, values, ind } = buildProductFilters(search, selectedCategory, min, max, userId);
 
     if (brand && brand !== "All") {
         where += ` AND p.brand = $${ind}`;
@@ -51,8 +57,7 @@ export const getallProductsModule = async (search, selectedCategory, min, max, b
 
     let query = `
         SELECT 
-            p.id, p.seller_id, p.category, p.pname, p.price, p.brand, p.stock, p.imageurl,
-             p.description, p.warranty_guarantee, p.weight, p.created_at, p.updated_at, p.image,
+            p.id, p.seller_id, p.category, p.pname, p.price, p.brand, p.stock, p.imageurl, p.description, p.warranty_guarantee, p.weight, p.created_at, p.updated_at, p.image,
             COALESCE(ARRAY_AGG(DISTINCT t.tag), '{}') AS tags,
             COALESCE(json_agg(DISTINCT jsonb_build_object('title', s.title, 'content', s.content)), '[]') AS sections,
             u.name AS seller_name, u.store_name, u.created_at AS seller_joined

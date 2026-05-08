@@ -1,7 +1,6 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { HiOutlineClipboardList, HiCheckCircle, HiOutlineCube, HiOutlineHome, HiArrowRight} from "react-icons/hi";
-import { BASE_URL } from "../path"; 
 
 const OrderSuccess = () => {
   const location = useLocation();
@@ -17,11 +16,6 @@ const OrderSuccess = () => {
     navigate(`/order/${orderId}`);
   };
   
-  const getImageUrl = (item) => {
-    if (item.imageurl) return item.imageurl;
-    if (item.id || item.product_id) return `${BASE_URL}/product/image/${item.id || item.product_id}`;
-    return 'https://via.placeholder.com/150';
-  };
 
 
   return (
@@ -107,4 +101,4 @@ const OrderSuccess = () => {
   );
 };
 
-export default OrderSuccess;
+export default OrderSuccess; 

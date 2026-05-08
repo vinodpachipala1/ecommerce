@@ -1,5 +1,5 @@
 import React from 'react';
-import { HiOutlineTruck, HiOutlineHeart, HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineHeart, HiOutlineTrash } from 'react-icons/hi';
 
 const CartItem = (props) => {
     const { item, QuantityIncrease, QuantityDecrease, removeFromCart } = props
@@ -67,5 +67,5 @@ const CartItem = (props) => {
         </div>
     );
 };
-
+ 
 export default CartItem;

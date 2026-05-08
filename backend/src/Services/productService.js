@@ -1,8 +1,8 @@
 import { getallProductsModule, getBrandsModule } from "../Modules/productModule.js";
 
 
-export const getallProductsService = async ( search, selectedCategory, min, max, brand, sort, page ) => {
-    const products = await getallProductsModule( search, selectedCategory, min, max, brand, sort, page );
+export const getallProductsService = async ( search, selectedCategory, min, max, brand, sort, userId, page ) => {
+    const products = await getallProductsModule( search, selectedCategory, min, max, brand, sort, userId, page );
     return products;
 };
 

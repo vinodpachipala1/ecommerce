@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { BASE_URL } from '../path';
 import axios from "axios";
 import { HiOutlineTicket, HiOutlineCalendar, HiOutlineEye, HiOutlineShoppingBag } from 'react-icons/hi';
@@ -8,7 +8,7 @@ import { socket } from "../socket";
 const OrderItemSkeleton = () => (
     <div className="bg-white rounded-lg shadow-md p-4 flex flex-col sm:flex-row gap-4 animate-pulse">
         <div className="w-full sm:w-24 h-32 sm:h-24 rounded-md bg-gray-200"></div>
-        <div className="flex-grow space-y-3 py-1">
+        <div className="flex-grow space-y-3 py-1"> 
             <div className="w-24 h-5 rounded-full bg-gray-200"></div>
             <div className="w-3/4 h-6 rounded bg-gray-200"></div>
             <div className="w-1/2 h-4 rounded bg-gray-200"></div>
@@ -25,15 +25,13 @@ const OrderItemSkeleton = () => (
 
 const Orders = () => {
     const navigate = useNavigate();
-    const { user, isAuthLoading } = useOutletContext();
+    
     const [orderItems, setOrderItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        if (isAuthLoading) {
-            return;
-        }
+        
         const getOrders = async () => {
             const token = localStorage.getItem("token");
             if (token) {
@@ -55,7 +53,7 @@ const Orders = () => {
         const timer = setTimeout(getOrders, 300);
         return () => clearTimeout(timer);
 
-    }, [user, navigate]);
+    }, [navigate]);
 
 
     useEffect(() => {

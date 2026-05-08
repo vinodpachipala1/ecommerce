@@ -16,20 +16,21 @@ const CustomerDashboard = () => {
         role: "",
         name: ""
     })
-    
+
     const [isAuthLoading, setIsAuthLoading] = useState(true);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-            
+
         const verify = async () => {
             try {
-                const res = await axios.get(`${BASE_URL}/auth/verifyLogin`, 
-                    { 
-                        headers: { Authorization: `Bearer ${token}` 
-                    }, 
-                    withCredentials: true, 
-                });
+                const res = await axios.get(`${BASE_URL}/auth/verifyLogin`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        },
+                        withCredentials: true,
+                    });
                 console.log(res);
                 if (res.data) {
                     setUser(res.data);
@@ -48,7 +49,7 @@ const CustomerDashboard = () => {
         } else {
             setIsAuthLoading(false);
         }
-        
+
     }, []);
 
     const Logout = async (e) => {
@@ -119,10 +120,18 @@ const CustomerDashboard = () => {
             <footer className="bg-[#37474F] w-full mt-auto text-center mb-16">
                 <div className="m-auto">
                     <p className="text-sm lg:text-xl font-medium text-[#ECEFF1] mt-3">PrimeCart &copy; 2025 | All Rights Reserved</p>
-                    <p className="text-[#cfd8dc] m-2 text-xs lg:text-base" >
-                        <a className="text-[#f8b400] m-1 hover:underline" href="#">Privacy Policy</a> |
-                        <a className="text-[#f8b400] m-1 hover:underline" href="#">Terms of Service</a> |
-                        <a className="text-[#f8b400] m-1 hover:underline" href="#">Contact Us</a>
+                    <p className="text-[#cfd8dc] m-2 text-xs lg:text-base">
+                        <button className="text-[#f8b400] m-1 hover:underline">
+                            Privacy Policy
+                        </button>
+                        |
+                        <button className="text-[#f8b400] m-1 hover:underline">
+                            Terms of Service
+                        </button>
+                        |
+                        <button className="text-[#f8b400] m-1 hover:underline">
+                            Contact Us
+                        </button>
                     </p>
                 </div>
             </footer>
