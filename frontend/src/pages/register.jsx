@@ -97,7 +97,7 @@ const Register = () => {
         e.preventDefault();
         if (verify()) {
             try {
-                const res = await axios.post(`${BASE_URL}/register`, { reg: reg, userType: userType });
+                const res = await axios.post(`${BASE_URL}/auth/register`, { reg: reg, userType: userType });
                 if (res.data.message === "Success") {
                     navigate("/login");
                 }

@@ -5,6 +5,11 @@ export const findUserByEmail = async (email) => {
     return result.rows[0];
 }
 
+export const register = async(name, email, password, store, BusinessAddress, phone, usertype) => {
+    await db.query(`INSERT INTO users (name, email, password, role, business_address, phone) VALUES ($1, $2, $3, $4, $5, $6)`,[name, email, password, usertype, BusinessAddress, phone]);
+    return { message : "Success"}
+}
+
 export const profileDetailsModule = async (userId, email) => {
     const result = await db.query(
       `SELECT a.*, u.store_name,u.business_address, u.phone as seller_phone FROM users u LEFT JOIN address a  ON a.customer_id = u.id WHERE u.id = $1`,

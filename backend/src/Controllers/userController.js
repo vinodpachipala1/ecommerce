@@ -1,7 +1,19 @@
-import { loginUser, profileDetailsService } from "../Services/userService.js";
+import { loginUser, profileDetailsService, registerUser } from "../Services/userService.js";
 
 import axios from "axios";
 
+export const register = async (req, res) => {
+    try {
+        const {name, email, password, confirmpassword, store, BusinessAddress, phone} = req.body.reg;
+        if(password != confirmpassword) return res.status(501).json({message : "passord should match confirm password!"});
+        const query = await registerUser(name, email, password, store, BusinessAddress, phone, req.body.userType);
+        console.log(query);
+        res.status(201).json({ message : query.message });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message : err.message});
+    }
+}
 
 export const login = async (req, res) => {
     
