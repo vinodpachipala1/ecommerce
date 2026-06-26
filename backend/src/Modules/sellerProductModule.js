@@ -23,8 +23,8 @@ export const deleteProductModule = async (id) => {
 
         const result = await client.query(
             `UPDATE products 
-       SET stock = 0, is_deleted = TRUE, updated_at = NOW() 
-       WHERE id = $1`,
+                SET stock = 0, is_deleted = TRUE, updated_at = NOW() 
+                WHERE id = $1`,
             [id]
         );
 
@@ -46,7 +46,7 @@ export const deleteProductModule = async (id) => {
 };
 
 export const InsertProduct = async(client, sellerId, category, productName, price, brand, stock, description, warranty_guarantee, weight, imageBuffer, imageUrl) => {
-    console.log(imageUrl);
+    
     const result = await client.query(`INSERT INTO products 
         (seller_id, category, pname, price, brand, stock, imageurl, image, description, warranty_guarantee, weight) 
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) 
@@ -56,3 +56,83 @@ export const InsertProduct = async(client, sellerId, category, productName, pric
 
     return result.rows[0].id;
 }
+
+export const InsertProductTags = async (client, productId, tags) => {
+    for (const tag of tags) {
+        await client.query(
+            `INSERT INTO product_tags (product_id, tag)
+             VALUES ($1, $2)`,
+            [productId, tag]
+        );
+    }
+};
+
+export const InsertProductSections = async (client, productId, sections) => {
+    for (const section of sections) {
+        await client.query(
+            `INSERT INTO product_sections (product_id, title, content)
+             VALUES ($1, $2, $3)`,
+            [
+                productId,
+                section.title,
+                section.content
+            ]
+        );
+    }
+};
+
+export const DeleteProductTags = async (client, productId) => {
+    await client.query(
+        `DELETE FROM product_tags
+         WHERE product_id = $1`,
+        [productId]
+    );
+};
+
+export const DeleteProductSections = async (client, productId) => {
+    await client.query(
+        `DELETE FROM product_sections
+         WHERE product_id = $1`,
+        [productId]
+    );
+};
+
+
+export const UpdateProduct = async ( client, productId, sellerId, category, productName, 
+    price, brand, stock, description, warranty_guarantee, weight, imageBuffer, imageUrl ) => {
+
+    let query;
+    let values;
+
+    if (imageBuffer) {
+        // New image uploaded
+        query = `
+            UPDATE products
+            SET category = $1, pname = $2, price = $3, brand = $4, stock = $5, imageurl = $6, 
+            image = $7, description = $8, warranty_guarantee = $9, weight = $10
+            WHERE id = $11
+            AND seller_id = $12
+            RETURNING *;
+        `;
+
+        values = [ category, productName, price, brand, stock, imageUrl, imageBuffer, 
+            description, warranty_guarantee, weight, productId, sellerId ];
+    } else {
+        // Keep existing image
+        query = `
+            UPDATE products
+            SET category = $1, pname = $2, price = $3, brand = $4, stock = $5, imageurl = $6, 
+            description = $7, warranty_guarantee = $8, weight = $9
+            WHERE id = $10
+            AND seller_id = $11
+            RETURNING *;
+        `;
+
+        values = [ category,productName, price, brand, stock, imageUrl, 
+            description, warranty_guarantee, weight, productId, sellerId ];
+    }
+
+    const result = await client.query(query, values);
+
+    return result.rows[0];
+};

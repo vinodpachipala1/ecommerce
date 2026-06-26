@@ -133,8 +133,15 @@ const AddProduct = (props) => {
             isValid = false;
         }
 
-        if ((!productdetails.imageurl || !/^https?:\/\/.+(\.(jpg|jpeg|png|webp|gif)(\?.*)?)?$/i.test(productdetails.imageurl)) && !productdetails.image) {
-            setErrors((prev) => ({ ...prev, imageurl: "Valid image URL is required" }));
+        const imageUrl = productdetails.imageurl?.trim();
+
+        const isValidImage = imageUrl.startsWith("data:image/") || /^https?:\/\/.+/i.test(imageUrl);
+
+        if (!isValidImage && !productdetails.image) {
+            setErrors((prev) => ({
+                ...prev,
+                imageurl: "Please provide a valid image URL or upload an image."
+            }));
             isValid = false;
         }
 
@@ -186,32 +193,33 @@ const AddProduct = (props) => {
     };
 
     const handleAddProduct = async (e) => {
-        const token = localStorage.getItem("token"); 
-       
+        const token = localStorage.getItem("token");
+
         e.preventDefault();
-        
-        
+
+
         if (verify()) {
-           
+
             const formData = createProductFormData(productdetails, sections, user.id);
             try {
-                
-                await axios.post(`${BASE_URL}/seller/addProduct`, formData, { headers: { Authorization: `Bearer ${token}` }});
+
+                await axios.post(`${BASE_URL}/seller/addProduct`, formData, { headers: { Authorization: `Bearer ${token}` } });
                 alert("Product added successfully!");
             } catch (err) {
                 console.log(err.response.data.message);
-                alert("Failed to add product.");
+                alert(err.response.data.message);
             }
         }
     };
 
     const editproduct = async (e) => {
-        console.log("hello");
+        const token = localStorage.getItem("token");
         e.preventDefault();
         if (verify()) {
+            console.log("hello")
             const formData = createProductFormData(productdetails, sections, user.id);
             try {
-                await axios.put(`${BASE_URL}/updateProductDetails/${productdetails.id}`, formData);
+                await axios.put(`${BASE_URL}/seller/updateProductDetails/${productdetails.id}`, formData, { headers: { Authorization: `Bearer ${token}` } });
                 alert("Product details updated successfully!");
             } catch (err) {
                 console.log(err);
@@ -279,7 +287,7 @@ const AddProduct = (props) => {
                     <div className="p-6 border border-gray-200 rounded-lg">
                         <h3 className="text-lg font-semibold text-gray-700 mb-6">Pricing & Stock</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                           
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-600 mb-1">Price *</label>
                                 <input type="number" name="price" onChange={handleChange} value={productdetails.price}
@@ -319,7 +327,7 @@ const AddProduct = (props) => {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-600 mb-1">Description *</label>
-                            <textarea name="description" rows="5" onChange={handleChange}value={productdetails.description}
+                            <textarea name="description" rows="5" onChange={handleChange} value={productdetails.description}
                                 className="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
                             />
                         </div>
@@ -329,7 +337,7 @@ const AddProduct = (props) => {
                     <div className="p-6 border border-gray-200 rounded-lg">
                         <h3 className="text-lg font-semibold text-gray-700 mb-6">Additional Details</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-600 mb-1">Warranty / Guarantee *</label>
                                 <input name="warranty_guarantee" onChange={handleChange} value={productdetails.warranty_guarantee}

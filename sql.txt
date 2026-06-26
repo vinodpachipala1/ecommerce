@@ -86,10 +86,3 @@ CREATE TABLE orders (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE product_inventory (
-    id SERIAL PRIMARY KEY,
-    product_id INT REFERENCES products(id) UNIQUE,
-    added_quantity INT DEFAULT 0,    -- total stock added by seller
-    sold_quantity INT DEFAULT 0,     -- total sold
-    updated_at TIMESTAMP DEFAULT NOW()
-);
